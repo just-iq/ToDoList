@@ -14,16 +14,16 @@ namespace ToDoList.Repository
             _context = context;
         }
 
-        public bool CreateTask(TaskItem task)
+        public async Task<bool> CreateTask(TaskItem task)
         {
             _context.Add(task);
-            return Save();
+            return await SaveAsync();
         }
 
-        public bool DeleteTask(TaskItem task)
+        public async Task<bool> DeleteTask(TaskItem task)
         {
             _context.Remove(task);
-            return Save();
+            return await SaveAsync();
         }
 
         public TaskItem GetTaskById(int id)
@@ -53,9 +53,10 @@ namespace ToDoList.Repository
             return await query.ToListAsync();
         }
 
-        public bool MarkTask(int id)
+        public async Task<bool> MarkTask(int id)
         {
             var foundTask = _context.Tasks.Where(t => t.Id == id).FirstOrDefault();
+
             if (foundTask == null)
             {
                 return false;
@@ -63,25 +64,26 @@ namespace ToDoList.Repository
 
             foundTask.status = "Completed";
 
-            return Save();
+            return await SaveAsync();
 
         }
 
-        public bool Save()
+        public async Task<bool> SaveAsync()
         {
-            var saved = _context.SaveChanges();
+            var saved = await _context.SaveChangesAsync();
             return saved >= 0 ? true : false;
         }
+
 
         public bool TaskExists(int id)
         {
             return _context.Tasks.Any(t => t.Id == id);
         }
 
-        public bool UpdateTask(TaskItem task)
+        public async Task<bool> UpdateTask(TaskItem task)
         {
             _context.Update(task);
-            return Save();
+            return await SaveAsync();
         }
     }
 }
