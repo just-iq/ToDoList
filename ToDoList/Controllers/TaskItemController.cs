@@ -48,9 +48,6 @@ namespace ToDoList.Controllers
 
             var task = _taskItemRepository.GetTaskById(id);
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             return Ok(new ApiResponse<TaskItem>(true, "Task retrieved", task));
         }
 
