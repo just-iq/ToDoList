@@ -1,9 +1,18 @@
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using ToDoList.Data;
 using ToDoList.Interfaces;
 using ToDoList.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
+
+//Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console()
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Add services to the container.
 
