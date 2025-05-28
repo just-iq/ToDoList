@@ -2,6 +2,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualBasic;
+using ToDoList.Dto;
 using ToDoList.Interfaces;
 using ToDoList.Models;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -28,10 +29,11 @@ namespace ToDoList.Controllers
         {
             _logger.LogInformation("Fetching tasks with filters: Status={Status}, Priority={Priority}, DueDate={DueDate}", status, priority, dueDate);
 
-            var tasks = await _taskItemRepository.GetTasksAsync(status, priority, dueDate);
+            var taskEntities = await _taskItemRepository.GetTasksAsync(status, priority, dueDate);
+            var taskDtos = _mapper.Map<List<TaskItemDto>>(taskEntities);
 
-            _logger.LogInformation("Retrieved {Count} task(s)", tasks.Count);
-            return Ok(new ApiResponse<List<TaskItem>>(true, "Tasks retrieved successfully", tasks));
+            _logger.LogInformation("Retrieved {Count} task(s)", taskDtos.Count);
+            return Ok(new ApiResponse<List<TaskItemDto>>(true, "Tasks retrieved successfully", taskDtos));
         }
 
         [HttpGet("{id}")]
@@ -46,13 +48,13 @@ namespace ToDoList.Controllers
                 return NotFound(new ApiResponse<TaskItem>(false, "Task not found"));
             }
 
-            var task = _taskItemRepository.GetTaskById(id);
+            var task = _mapper.Map<TaskItemDto>(_taskItemRepository.GetTaskById(id));
 
-            return Ok(new ApiResponse<TaskItem>(true, "Task retrieved", task));
+            return Ok(new ApiResponse<TaskItemDto>(true, "Task retrieved", task));
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateTask([FromBody] TaskItem taskCreate, [FromQuery] string? status, [FromQuery] string? priority, [FromQuery] DateTime? dueDate)
+        public async Task<IActionResult> CreateTask([FromBody] TaskItemDto taskCreate, [FromQuery] string? status, [FromQuery] string? priority, [FromQuery] DateTime? dueDate)
         {
             _logger.LogInformation("Attempting to create a task titled: {Title}", taskCreate?.Title);
 
@@ -74,7 +76,9 @@ namespace ToDoList.Controllers
                 return BadRequest(new ApiResponse<string>(false, "Task already exists"));
             }
 
-            var created = await _taskItemRepository.CreateTask(taskCreate);
+            var taskItemMap = _mapper.Map<TaskItem>(taskCreate);
+
+            var created = await _taskItemRepository.CreateTask(taskItemMap);
 
             if (!created)
             {
@@ -82,13 +86,13 @@ namespace ToDoList.Controllers
                 return BadRequest(new ApiResponse<string>(false, "Failed to create task"));
             }
 
-            _logger.LogInformation("Task created: {Title}", taskCreate.Title);
-            return Ok(new ApiResponse<TaskItem>(true, "Task created", taskCreate));
+            _logger.LogInformation("Task created: {Title}", taskItemMap.Title);
+            return Ok(new ApiResponse<TaskItem>(true, "Task created", taskItemMap));
         }
 
         [HttpPut("{id}")]
 
-        public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskItem updatedTask)
+        public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskItemDto updatedTask)
         {
             _logger.LogInformation("Updating task with ID: {Id}", id);
 
@@ -98,19 +102,16 @@ namespace ToDoList.Controllers
                 return BadRequest(new ApiResponse<string>(false, "No data input"));
             }
 
-            if (id != updatedTask.Id)
-            {
-                _logger.LogWarning("Mismatch between route ID and task ID: {Id} != {TaskId}", id, updatedTask.Id);
-                return BadRequest(new ApiResponse<string>(false, "Task ID mismatch"));
-            }
 
             if (!_taskItemRepository.TaskExists(id))
             {
                 _logger.LogWarning("Cannot update task. Task with ID {Id} not found", id);
                 return NotFound(new ApiResponse<string>(false, "Task not found"));
             }
+            
+            var taskItemMap = _mapper.Map<TaskItem>(updatedTask);
 
-            var updated = await _taskItemRepository.UpdateTask(updatedTask);
+            var updated = await _taskItemRepository.UpdateTask(taskItemMap);
 
             if (!updated)
             {
@@ -119,7 +120,7 @@ namespace ToDoList.Controllers
             }
 
             _logger.LogInformation("Task updated: {Id}", id);
-            return Ok(new ApiResponse<TaskItem>(true, "Task updated", updatedTask));
+            return Ok(new ApiResponse<TaskItem>(true, "Task updated", taskItemMap));
         }
 
         [HttpDelete("{id}")]
