@@ -62,7 +62,7 @@ namespace ToDoList.Controllers
             return StatusCode(response.Success ? 200 : 404, response);
         }
 
-        [HttpPatch("{id}/complete")]
+        [HttpPut("{id}/complete")]
         public async Task<IActionResult> MarkComplete(int id)
         {
             _logger.LogInformation("Marking task complete");
