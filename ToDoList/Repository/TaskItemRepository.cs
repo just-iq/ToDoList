@@ -2,6 +2,7 @@
 using ToDoList.Data;
 using ToDoList.Interfaces;
 using ToDoList.Models;
+using static ToDoList.Enums.TaskEnums;
 
 namespace ToDoList.Repository
 {
@@ -31,24 +32,19 @@ namespace ToDoList.Repository
             return _context.Tasks.Where(t => t.Id == id).FirstOrDefault();
         }
 
-        public async Task<List<TaskItem>> GetTasksAsync(string? status, string? priority, DateTime? dueDate)
+        public async Task<List<TaskItem>> GetTasksAsync(StatusTask? status, PriorityTask? priority, DateTime? dueDate)
         {
             var query = _context.Tasks.AsQueryable();
 
-            if (status != null)
-            {
-                query = query.Where(t => t.status == status);
-            }
+            if (status.HasValue)
+                query = query.Where(t => t.Status == status.Value);
 
-            if (priority != null)
-            {
-                query = query.Where(t => t.Priority == priority);
-            }
+            if (priority.HasValue)
+                query = query.Where(t => t.Priority == priority.Value);
 
-            if (dueDate != null)
-            {
+            if (dueDate.HasValue)
                 query = query.Where(t => t.DueDate.Date == dueDate.Value.Date);
-            }
+
 
             return await query.ToListAsync();
         }
@@ -62,7 +58,7 @@ namespace ToDoList.Repository
                 return false;
             }
 
-            foundTask.status = "Completed";
+            foundTask.Status = StatusTask.Completed;
 
             return await SaveAsync();
 

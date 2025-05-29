@@ -2,6 +2,7 @@
 using ToDoList.Dto;
 using ToDoList.Interfaces;
 using ToDoList.Models;
+using static ToDoList.Enums.TaskEnums;
 
 namespace ToDoList.Services
 {
@@ -16,7 +17,7 @@ namespace ToDoList.Services
             _mapper = mapper;
         }
 
-        public async Task<ApiResponse<List<TaskItem>>> GetTasksAsync(string? status, string? priority, DateTime? dueDate)
+        public async Task<ApiResponse<List<TaskItem>>> GetTasksAsync(StatusTask? status, PriorityTask? priority, DateTime? dueDate)
         {
             var tasks = await _repository.GetTasksAsync(status, priority, dueDate);
             return new ApiResponse<List<TaskItem>>(true, "Tasks retrieved", tasks);
@@ -27,18 +28,18 @@ namespace ToDoList.Services
             if (!_repository.TaskExists(id))
                 return new ApiResponse<TaskItem>(false, "Task not found");
 
-            var task = _mapper.Map<TaskItem>(_repository.GetTaskById(id));
+            var task = _repository.GetTaskById(id);
             return new ApiResponse<TaskItem>(true, "Task found", task);
         }
 
-        public async Task<ApiResponse<TaskItem>> CreateTaskAsync(TaskItemDto taskDto, string? status, string? priority, DateTime? dueDate)
+        public async Task<ApiResponse<TaskItem>> CreateTaskAsync(TaskItemDto taskDto, StatusTask? status, PriorityTask? priority, DateTime? dueDate)
         {
             var tasks = await _repository.GetTasksAsync(status, priority, dueDate);
             if (tasks.Any(t => t.Title.Trim().ToUpper() == taskDto.Title.Trim().ToUpper()))
                 return new ApiResponse<TaskItem>(false, "Task already exists");
 
             var task = _mapper.Map<TaskItem>(taskDto);
-            task.status = "Pending";
+            task.Status = StatusTask.Pending;
 
             var success = await _repository.CreateTask(task);
 
@@ -54,7 +55,9 @@ namespace ToDoList.Services
 
             var task = _mapper.Map<TaskItem>(taskDto);
             task.Id = id;
+
             var success = await _repository.UpdateTask(task);
+
             return success
                 ? new ApiResponse<TaskItem>(true, "Task updated", task)
                 : new ApiResponse<TaskItem>(false, "Failed to update task");
@@ -67,6 +70,7 @@ namespace ToDoList.Services
 
             var task = _repository.GetTaskById(id);
             var success = await _repository.DeleteTask(task);
+
             return success
                 ? new ApiResponse<TaskItem>(true, "Task deleted", task)
                 : new ApiResponse<TaskItem>(false, "Failed to delete task");
@@ -79,6 +83,7 @@ namespace ToDoList.Services
 
             var task = _repository.GetTaskById(id);
             var success = await _repository.MarkTask(id);
+
             return success
                 ? new ApiResponse<TaskItem>(true, "Task marked complete", task)
                 : new ApiResponse<TaskItem>(false, "Failed to mark task");

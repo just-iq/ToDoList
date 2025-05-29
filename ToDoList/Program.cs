@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
@@ -19,7 +20,11 @@ builder.Host.UseSerilog();
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<ITaskItemRepository, TaskItemRepository>();
 builder.Services.AddScoped<ITaskService, TaskService>();
@@ -33,6 +38,8 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Description = "A simple ASP.NET Core Web API for managing tasks"
     });
+
+    options.UseInlineDefinitionsForEnums();
 });
 
 builder.Services.AddDbContext<DataContext>(options =>

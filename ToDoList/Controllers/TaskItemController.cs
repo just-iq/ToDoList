@@ -6,6 +6,7 @@ using ToDoList.Dto;
 using ToDoList.Interfaces;
 using ToDoList.Models;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using static ToDoList.Enums.TaskEnums;
 
 namespace ToDoList.Controllers
 {
@@ -23,7 +24,7 @@ namespace ToDoList.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTasks([FromQuery] string? status, [FromQuery] string? priority, [FromQuery] DateTime? dueDate)
+        public async Task<IActionResult> GetTasks([FromQuery] StatusTask? status, [FromQuery] PriorityTask? priority, [FromQuery] DateTime? dueDate)
         {
             _logger.LogInformation("Fetching tasks");
             var response = await _taskService.GetTasksAsync(status, priority, dueDate);
@@ -39,7 +40,7 @@ namespace ToDoList.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateTask([FromBody] TaskItemDto dto, [FromQuery] string? status, [FromQuery] string? priority, [FromQuery] DateTime? dueDate)
+        public async Task<IActionResult> CreateTask([FromBody] TaskItemDto dto, [FromQuery] StatusTask? status, [FromQuery] PriorityTask? priority, [FromQuery] DateTime? dueDate)
         {
             _logger.LogInformation("Creating task");
             var response = await _taskService.CreateTaskAsync(dto, status, priority, dueDate);
